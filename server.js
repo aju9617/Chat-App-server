@@ -2,11 +2,28 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const mongoose = require('mongoose');
+const Chatuser = require('./chatSchema');
 const socketIo = require('socket.io');
 
 const app = express();
 
 dotenv.config({ path: './config.env' });
+const DB = process.env.DATABASE_URL.replace(
+  '<PASSWORD>',
+  process.env.DATABASE_PASS
+);
+
+mongoose
+  .connect(DB, {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useFindAndModify: false,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log('Database connected!!');
+  });
 
 const server = http.Server(app);
 app.use(cors());
@@ -25,7 +42,7 @@ app.get('/', (req, res) => {
 io.on('connection', function (socket) {
   socket.on('create', function (room, name) {
     socket.join(room);
-    console.log('some one joined');
+    Chatuser.create({ firstName: name, roomId: room, joinedAt: Date.now() });
     socket.to(room).emit('user-joined', name);
   });
 
