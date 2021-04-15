@@ -13,7 +13,7 @@ app.use(cors());
 app.options('*', cors());
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CLIENT,
+    origin: [process.env.CLIENT, 'http://localhost:3000/'],
     methods: ['GET', 'POST'],
   },
 });
@@ -23,19 +23,32 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', function (socket) {
-  socket.on('create', function (room) {
+  socket.on('create', function (room, name) {
     socket.join(room);
+    console.log('some one joined');
+    socket.to(room).emit('user-joined', name);
   });
 
-  socket.on('toServer', (message, room) => {
-    socket.to(room).emit('toClient', message);
+  socket.on('toServer', (message, room, name) => {
+    socket.to(room).emit('toClient', message, name);
   });
 
-  //Whenever someone disconnects this piece of code executed
-  // socket.on('disconnect', function () {});
+  socket.on('join-room', (name) => {
+    socket.to(room).emit('user-joined', name);
+  });
+  socket.on('i-m-leaving', (room, name) => {
+    console.log('user lefting');
+    socket.to(room).emit('user-left', name);
+  });
+
+  // Whenever someone disconnects this piece of code executed
+  socket.on('disconnect', function () {
+    console.log('left');
+    // socket.to(room).emit('user-left');
+  });
 });
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3030;
 server.listen(PORT, function () {
   console.log('server is up and running on ' + PORT);
 });
