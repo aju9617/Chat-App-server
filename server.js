@@ -28,15 +28,68 @@ mongoose
 const server = http.Server(app);
 app.use(cors());
 app.options('*', cors());
+
+const allowedOrigins = process.env.ORIGIN.split(',');
+
+app.use(function (req, res, next) {
+  const origin = req.headers.origin;
+  if (allowedOrigins.indexOf(origin) > -1) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'GET, POST, OPTIONS, PUT, PATCH, DELETE'
+  );
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-Requested-With,content-type, Accept'
+  );
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  next();
+});
+
 const io = socketIo(server, {
   cors: {
-    origin: [process.env.CLIENT, 'http://localhost:3000/'],
-    methods: ['GET', 'POST'],
+    origin: [process.env.CLIENT],
+    methods: ['GET', 'POST', 'DELETE'],
   },
 });
 
 app.get('/', (req, res) => {
+  console.log(req.headers.origin);
   res.send({ response: 'I am alive!' }).status(200);
+});
+
+app.get('/user-registered', async (req, res) => {
+  try {
+    const users = await Chatuser.find({});
+    res.status(200).json({
+      status: 'success',
+      result: users,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'failed',
+      error: 'Failed to fetch users',
+    });
+  }
+});
+
+app.get('/delete-user/:userID', async (req, res) => {
+  try {
+    await Chatuser.findByIdAndDelete({ _id: req.params.userID });
+
+    res.status(200).json({
+      status: 'success',
+      result: 'deleted user',
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'failed',
+      error: 'Failed to delete users',
+    });
+  }
 });
 
 io.on('connection', function (socket) {
