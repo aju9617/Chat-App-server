@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 
+//For storing users name who have created chat room or joined chat room.
+// just to know how many people visited my app 😁
+
 const chatSchema = mongoose.Schema({
   firstName: {
     type: String,

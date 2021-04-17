@@ -27,27 +27,6 @@ mongoose
 
 const server = http.Server(app);
 app.use(cors());
-app.options('*', cors());
-
-const allowedOrigins = process.env.ORIGIN.split(',');
-
-app.use(function (req, res, next) {
-  const origin = req.headers.origin;
-  if (allowedOrigins.indexOf(origin) > -1) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-
-  res.setHeader(
-    'Access-Control-Allow-Methods',
-    'GET, POST, OPTIONS, PUT, PATCH, DELETE'
-  );
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-Requested-With,content-type, Accept'
-  );
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  next();
-});
 
 const io = socketIo(server, {
   cors: {
@@ -118,7 +97,7 @@ io.on('connection', function (socket) {
   });
 });
 
-const PORT = process.env.PORT || 3030;
+const PORT = process.env.PORT || 3040;
 server.listen(PORT, function () {
   console.log('server is up and running on ' + PORT);
 });
